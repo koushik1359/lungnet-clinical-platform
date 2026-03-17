@@ -12,6 +12,7 @@ from PIL import Image
 # Import our research components
 from backend.src.core.data_processor import ImageProcessor
 from backend.src.core.xai import MedicalCAM
+from backend.src.models.lung_net import LungNet
 
 from fastapi.responses import FileResponse
 import os
@@ -41,15 +42,19 @@ app.add_middleware(
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Standalone Deployment Mode: Load from .pth file
-model_path = "backend/src/models/lungnet_best.pth"
+# Use environment variable or default Docker path
+model_path = os.getenv("MODEL_PATH", "backend/src/models/lungnet_best.pth")
 print(f"Server Startup: Loading Medical Intelligence (Standalone Mode)...")
 
 model = LungNet(num_classes=3).to(device)
-try:
-    model.load_state_dict(torch.load(model_path, map_location=device))
-    print("✓ Weights Loaded Successfully")
-except Exception as e:
-    print(f"⚠ Warning: Could not load standalone weights. Falling back to fresh weights. Error: {e}")
+if os.path.exists(model_path):
+    try:
+        model.load_state_dict(torch.load(model_path, map_location=device))
+        print("✓ Weights Loaded Successfully")
+    except Exception as e:
+        print(f"⚠ Warning: Could not load standalone weights. Error: {e}")
+else:
+    print(f"⚠ Warning: Model weights not found at {model_path}")
 
 model.eval()
 
