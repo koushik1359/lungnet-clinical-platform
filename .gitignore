@@ -1,0 +1,25 @@
+# MLflow tracking
+mlflow.db
+mlruns/
+.temp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+
+# React / Node
+node_modules/
+dist/
+dist-ssr
+*.local
+
+# Visual Studio Code
+.vscode/
+
+# Medical AI Data (Keep folder but ignore large images if needed)
+data/
+*.png
+diagnostic_output.png

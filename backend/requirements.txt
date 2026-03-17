@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+torch
+torchvision
+numpy
+opencv-python
+pillow
+mlflow
+matplotlib
+scikit-learn
+python-dotenv
+tqdm
