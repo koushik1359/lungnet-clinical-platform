@@ -11,8 +11,8 @@ class LungNet(nn.Module):
     def __init__(self, num_classes=3):
         super(LungNet, self).__init__()
         
-        # Load pre-trained weights from ImageNet
-        self.vit = models.vit_b_16(weights=ViT_B_16_Weights.IMAGENET1K_V1)
+        # Production: We load architecture only (No ImageNet download)
+        self.vit = models.vit_b_16(weights=None)
         
         # Replace the head for 3 classes
         in_features = self.vit.heads.head.in_features
