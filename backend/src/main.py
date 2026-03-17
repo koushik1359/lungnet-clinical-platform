@@ -6,13 +6,27 @@ import numpy as np
 import mlflow.pytorch
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from PIL import Image
 
 # Import our research components
 from backend.src.core.data_processor import ImageProcessor
 from backend.src.core.xai import MedicalCAM
 
+from fastapi.responses import FileResponse
+import os
+
 app = FastAPI(title="MedAI Diagnostic Platform")
+
+# Mount the stationary frontend (for production)
+if os.path.exists("static"):
+    app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
+
+@app.get("/")
+async def read_index():
+    if os.path.exists("static/index.html"):
+        return FileResponse("static/index.html")
+    return {"message": "LungNet AI API Online. Frontend not built yet."}
 
 # Professional CORS setup for our React Frontend
 app.add_middleware(
@@ -26,14 +40,17 @@ app.add_middleware(
 # Load the AI Brain once at startup
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Points to our verified 99% accuracy run
-tracking_uri = "sqlite:///C:/Users/koush/OneDrive/Desktop/ML%20Projects/med_ai_platform/mlflow.db"
-mlflow.set_tracking_uri(tracking_uri)
-run_id = "0cfc9bf3d0de49ca8d7c0aed62e91f05"
-model_uri = f"runs:/{run_id}/model"
+# Standalone Deployment Mode: Load from .pth file
+model_path = "backend/src/models/lungnet_best.pth"
+print(f"Server Startup: Loading Medical Intelligence (Standalone Mode)...")
 
-print(f"Server Startup: Loading Medical Intelligence (Run {run_id})...")
-model = mlflow.pytorch.load_model(model_uri).to(device)
+model = LungNet(num_classes=3).to(device)
+try:
+    model.load_state_dict(torch.load(model_path, map_location=device))
+    print("✓ Weights Loaded Successfully")
+except Exception as e:
+    print(f"⚠ Warning: Could not load standalone weights. Falling back to fresh weights. Error: {e}")
+
 model.eval()
 
 processor = ImageProcessor()
